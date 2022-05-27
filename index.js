@@ -1,6 +1,6 @@
 const rp = require("request-promise-native");
 const baseURL = "https://imagedelivery.net/Vi7wi5KSItxGFsWRG2Us6Q";
-const variants = ["w200", "w1000", "w2000", "w3000", "w4000", "zmax", "width=30,height=30"];
+const variants = ["w1000"];
 
 function buildURLs(freqName) {
     return variants.map(v => `${baseURL}/testimg-${freqName}.jpg/${v}`);
@@ -11,6 +11,8 @@ function sleep(s) {
 }
 
 async function loopFreq(freqInSeconds, freqName) {
+    const randWait = Math.random() * Math.min(freqInSeconds/2, 30);
+    await sleep(randWait);
     while (true) {
         const roundStart = new Date();
         console.error(`${roundStart.toISOString()}: another round ${freqName}`);
@@ -29,8 +31,9 @@ async function loopFreq(freqInSeconds, freqName) {
 
         const remaining = Math.min(freqInSeconds - (((new Date()).getTime() - roundStart.getTime()) / 1000), freqInSeconds);
         if(remaining > 0) {
-            console.error(`Freq ${freqName}, wait ${remaining}`);
-            await sleep(remaining);
+            const randWait = Math.random() * Math.min(freqInSeconds/2, 30);
+            console.error(`Freq ${freqName}, wait ${remaining} + ${randWait}`);
+            await sleep(remaining+randWait);
         }
     }
 }
@@ -62,9 +65,9 @@ async function fetchAndMeasure(url, freqName, accept) {
             cfImagesC: cfImagesMetrics.c,
             ttfb: parseInt(res.timings.response - res.timings.connect),
             contentType: res.headers['content-type'],
-            warning: res.headers['warning'],
             ray: res.headers['cf-ray'],
             colo: getColo(res.headers['cf-ray']),
+            warning: res.headers['warning'],
         };
     } catch (e) {
         return {
@@ -104,4 +107,7 @@ loopFreq(60, "1m");
 loopFreq(60*10, "10m");
 loopFreq(60*30, "30m");
 loopFreq(60*60, "1h");
+loopFreq(60*60*2, "2h");
+loopFreq(60*60*3, "3h");
+loopFreq(60*60*4, "4h");
 loopFreq(60*60*5, "5h");
